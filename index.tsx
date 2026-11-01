@@ -4,22 +4,23 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { Button } from "@components/Button";
 import { Divider } from "@components/Divider";
+import { Heading } from "@components/Heading";
+import { Paragraph } from "@components/Paragraph";
+import { Text } from "@components/Text";
 import { Logger } from "@utils/Logger";
 import definePlugin, { PluginNative } from "@utils/types";
 import {
 	Alerts,
-	Button,
 	ChannelStore,
 	Constants,
-	Forms,
 	React,
 	RestAPI,
 	Select,
 	SelectedChannelStore,
 	showToast,
 	SnowflakeUtils,
-	Text,
 	TextInput,
 	UserStore,
 } from "@webpack/common";
@@ -196,13 +197,13 @@ async function handleDownload(name: string, content: string, type: string, messa
 		// Save the manifest file (JSON/CSV/HTML) inside the subfolder
 		const res = await Native.saveFile(subfolderPath, name, content);
 		if (res.ok) {
-			showToast(`Saved ${name} to ${subfolderPath}`, "success");
+			showToast({ text: `Saved ${name} to ${subfolderPath}`, variant: "success" });
 
 			// Handle Media Downloading
 			if (shouldDownloadMedia && messages) {
 				const attachments = messages.flatMap(m => m.attachments.map(a => ({ ...a, messageId: m.id })));
 				if (attachments.length > 0) {
-					showToast(`Downloading ${attachments.length} attachments...`);
+					showToast({ text: `Downloading ${attachments.length} attachments...` });
 					const mediaFolder = "attachments";
 
 					for (let i = 0; i < attachments.length; i++) {
@@ -217,13 +218,13 @@ async function handleDownload(name: string, content: string, type: string, messa
 						} catch (err) {
 							logger.error(`Failed to download attachment ${a.filename}:`, err);
 						}
-						if ((i + 1) % 10 === 0) showToast(`Downloaded ${i + 1}/${attachments.length} items...`);
+						if ((i + 1) % 10 === 0) showToast({ text: `Downloaded ${i + 1}/${attachments.length} items...` });
 					}
-					showToast("Media download complete!", "success");
+					showToast({ text: "Media download complete!", variant: "success" });
 				}
 			}
 		} else {
-			showToast(`Failed to save: ${res.error}`, "failure");
+			showToast({ text: `Failed to save: ${res.error}`, variant: "critical" });
 			downloadFile(name, content, type);
 		}
 	} else {
@@ -379,9 +380,9 @@ export default definePlugin({
 				cancelText: "Cancel",
 				onConfirm: async () => {
 					try {
-						showToast("Starting export...");
+						showToast({ text: "Starting export..." });
 						const messages = await fetchAllMessages(channelId, count => {
-							if (count % 500 === 0) showToast(`Fetched ${count} messages...`);
+							if (count % 500 === 0) showToast({ text: `Fetched ${count} messages...` });
 						});
 						const data = {
 							metadata: {
@@ -426,9 +427,9 @@ export default definePlugin({
 				cancelText: "Cancel",
 				onConfirm: async () => {
 					try {
-						showToast("Starting export...");
+						showToast({ text: "Starting export..." });
 						const messages = await fetchAllMessages(channelId, count => {
-							if (count % 500 === 0) showToast(`Fetched ${count} messages...`);
+							if (count % 500 === 0) showToast({ text: `Fetched ${count} messages...` });
 						});
 						const csv = exportToCSV(messages);
 						await handleDownload(`${formatFileName(channel)}.csv`, csv, "text/csv", messages);
@@ -456,9 +457,9 @@ export default definePlugin({
 				cancelText: "Cancel",
 				onConfirm: async () => {
 					try {
-						showToast("Starting export...");
+						showToast({ text: "Starting export..." });
 						const messages = await fetchAllMessages(channelId, count => {
-							if (count % 500 === 0) showToast(`Fetched ${count} messages...`);
+							if (count % 500 === 0) showToast({ text: `Fetched ${count} messages...` });
 						});
 						const html = exportToHTML(channel, messages);
 						await handleDownload(`${formatFileName(channel)}.html`, html, "text/html", messages);
@@ -545,16 +546,16 @@ export default definePlugin({
 		return (
 			<div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 				<div>
-					<Forms.FormText>
+					<Paragraph>
 						Export complete chat history from the currently selected channel:{" "}
 						<strong>#{channel?.name || "No channel selected"}</strong>
-					</Forms.FormText>
+					</Paragraph>
 				</div>
 
 				<div>
-					<Forms.FormTitle tag="h5">Export Path</Forms.FormTitle>
+					<Heading tag="h5">Export Path</Heading>
 					<div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-						<Forms.FormText
+						<Paragraph
 							style={{
 								flex: 1,
 								margin: 0,
@@ -564,8 +565,8 @@ export default definePlugin({
 							}}
 						>
 							{exportPath || "Not set (downloads to browser default)"}
-						</Forms.FormText>
-						<Button size={Button.Sizes.SMALL} onClick={handleSelectFolder} disabled={IS_WEB}>
+						</Paragraph>
+						<Button size="small" onClick={handleSelectFolder} disabled={IS_WEB}>
 							Select Folder
 						</Button>
 					</div>
@@ -598,7 +599,7 @@ export default definePlugin({
 					</div>
 				:	<div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
 						<div style={{ flex: 1 }}>
-							<Forms.FormTitle tag="h5">Select Format</Forms.FormTitle>
+							<Heading tag="h5">Select Format</Heading>
 							<Select
 								options={[
 									{ label: "JSON (Complete Metadata)", value: "json" },
@@ -612,7 +613,7 @@ export default definePlugin({
 						</div>
 						<Button
 							onClick={() => handleExport(format)}
-							color={Button.Colors.BRAND}
+							variant="primary"
 							disabled={!channel}
 							style={{ padding: "10px 24px" }}
 						>
@@ -624,7 +625,7 @@ export default definePlugin({
 				<Divider />
 
 				<div>
-					<Forms.FormTitle tag="h5">Quick Date Presets</Forms.FormTitle>
+					<Heading tag="h5">Quick Date Presets</Heading>
 					<div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
 						{[
 							{ label: "Today", days: 0 },
@@ -634,8 +635,8 @@ export default definePlugin({
 						].map(p => (
 							<Button
 								key={p.label}
-								size={Button.Sizes.SMALL}
-								color={Button.Colors.PRIMARY}
+								size="small"
+								variant="primary"
 								onClick={() => {
 									if (p.days === -1) {
 										settings.store.filterStartDate = "";
@@ -656,18 +657,18 @@ export default definePlugin({
 
 					<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
 						<div>
-							<Forms.FormTitle tag="h5">Start Date</Forms.FormTitle>
+							<Heading tag="h5">Start Date</Heading>
 							<TextInput type="date" value={filterStartDate} onChange={v => (settings.store.filterStartDate = v)} />
 						</div>
 						<div>
-							<Forms.FormTitle tag="h5">End Date</Forms.FormTitle>
+							<Heading tag="h5">End Date</Heading>
 							<TextInput type="date" value={filterEndDate} onChange={v => (settings.store.filterEndDate = v)} />
 						</div>
 					</div>
 				</div>
 
 				<div>
-					<Forms.FormTitle tag="h5">Only from User (ID)</Forms.FormTitle>
+					<Heading tag="h5">Only from User (ID)</Heading>
 					<TextInput
 						placeholder="Discord User ID"
 						value={filterUserId}
